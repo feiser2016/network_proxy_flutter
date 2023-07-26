@@ -13,14 +13,39 @@ void main() {
 
 String? ip;
 
+/// 获取本机ip (en0 or WLAN)优先
 Future<String> localIp() async {
-  ip ??= await NetworkInterface.list().then((interfaces) {
-    return interfaces.firstWhere((it) => it.name == "en0" || it.name == 'WLAN',
-        orElse: () => interfaces.first).addresses.first.address;
-  });
+  ip ??= await localAddress().then((value) => value.address);
   return ip!;
 }
 
+Future<InternetAddress> localAddress() async {
+  return await NetworkInterface.list().then((interfaces) {
+    return interfaces
+        .firstWhere(primary, orElse: () => interfaces.first)
+        .addresses
+        .first;
+  });
+}
+
+/// 获取本机所有ip
+Future<List<String>> localIps() async {
+  var list = await NetworkInterface.list();
+  list.sort((a, b) {
+    if (primary(a)) {
+      return -1;
+    }
+    return 1;
+  });
+  return list.map((it) => it.addresses.first.address).toList();
+}
+
 Future<String> networkName() {
-  return NetworkInterface.list().then((interfaces) => interfaces.first.name);
+  return NetworkInterface.list()
+      .then((interfaces) => interfaces.firstWhere(primary, orElse: () => interfaces.first).name);
+}
+
+// en0(macos系统) or WLAN(widows设备名)优先
+bool primary(NetworkInterface it) {
+  return it.name == 'en0' || it.name == 'WLAN';
 }
