@@ -28,8 +28,14 @@ Future<InternetAddress> localAddress() async {
   });
 }
 
+List<String>? ipList;
+
 /// 获取本机所有ip
 Future<List<String>> localIps() async {
+  if (ipList != null) {
+    return ipList!;
+  }
+
   var list = await NetworkInterface.list();
   list.sort((a, b) {
     if (primary(a)) {
@@ -37,7 +43,8 @@ Future<List<String>> localIps() async {
     }
     return 1;
   });
-  return list.map((it) => it.addresses.first.address).toList();
+  ipList = list.map((it) => it.addresses.first.address).toList();
+  return ipList!;
 }
 
 Future<String> networkName() {
